@@ -8,7 +8,7 @@ from docker.models.containers import Container
 
 from ..utils import (
     CONTAINER_NAME,
-    generate_dockerfile_content_custom_app,
+    generate_dockerfile_content_custom_app_with_local_prestart,
     get_logs,
     get_nginx_config,
     get_response_text2,
@@ -46,10 +46,9 @@ def verify_container(container: Container, response_text: str) -> None:
     assert "processes = 16" in logs
     assert "cheaper = 2" in logs
     assert "Checking for script in /application/custom_app/prestart.sh" in logs
-    assert "There is no script /application/custom_app/prestart.sh" in logs
-    assert "Checking for script in /app/prestart.sh" in logs
-    assert "Running script /app/prestart.sh" in logs
-    assert "custom prestart.sh running" in logs
+    assert "Running script /application/custom_app/prestart.sh" in logs
+    assert "custom app dir prestart.sh running" in logs
+    assert "Checking for script in /app/prestart.sh" not in logs
     assert "spawned uWSGI master process" in logs
     assert "spawned uWSGI worker 1" in logs
     assert "spawned uWSGI worker 2" in logs
@@ -59,16 +58,16 @@ def verify_container(container: Container, response_text: str) -> None:
     assert "success: uwsgi entered RUNNING state, process has stayed up for" in logs
 
 
-def test_env_vars_1() -> None:
+def test_custom_app_local_prestart() -> None:
     name = os.getenv("NAME", "")
-    dockerfile_content = generate_dockerfile_content_custom_app(name)
+    dockerfile_content = generate_dockerfile_content_custom_app_with_local_prestart(name)
     dockerfile = "Dockerfile"
     response_text = get_response_text2()
     sleep_time = int(os.getenv("SLEEP_TIME", 3))
     remove_previous_container(client)
-    tag = "uwsgi-nginx-testimage"
+    tag = "uwsgi-nginx-testimage-local-prestart"
     test_path = Path(__file__)
-    path = test_path.parent / "custom_app"
+    path = test_path.parent / "custom_app_with_prestart"
     dockerfile_path = path / dockerfile
     dockerfile_path.write_text(dockerfile_content)
     client.images.build(path=str(path), dockerfile=dockerfile, tag=tag)
@@ -85,7 +84,6 @@ def test_env_vars_1() -> None:
     time.sleep(sleep_time)
     verify_container(container, response_text)
     container.stop()
-    # Test that everything works after restarting too
     container.start()
     time.sleep(sleep_time)
     verify_container(container, response_text)

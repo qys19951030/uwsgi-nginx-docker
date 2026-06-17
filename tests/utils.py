@@ -61,3 +61,10 @@ def generate_dockerfile_content_app_with_installs(name: str) -> str:
     content += "RUN pip install flask\n"
     content += "COPY ./app/main.py /app/main.py\n"
     return content
+
+
+def generate_dockerfile_content_custom_app_with_local_prestart(name: str) -> str:
+    content = f"FROM tiangolo/uwsgi-nginx:{name}\n"
+    content += "COPY ./application /application\n"
+    content += "WORKDIR /application\n"
+    return content

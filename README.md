@@ -148,7 +148,7 @@ FROM tiangolo/uwsgi-nginx:python3.12
 ENV UWSGI_INI /application/uwsgi.ini
 
 COPY ./application /application
-WORKDIR /appapplication
+WORKDIR /application
 ```
 
 And your `uwsgi.ini` file in `./application/uwsgi.ini` would contain:
@@ -159,6 +159,8 @@ wsgi-file=/application/main.py
 ```
 
 **Note**: it's important to include the `WORKDIR` option, otherwise uWSGI will start the application in `/app`.
+
+When using a custom app directory via `UWSGI_INI`, you can also place your `prestart.sh` script in the same directory as your custom `uwsgi.ini` file. The image will first look for `prestart.sh` in the directory containing the custom `uwsgi.ini`, and fall back to `/app/prestart.sh` if not found. This means you don't need to copy your prestart script back to `/app` when using a custom app directory.
 
 ### Custom uWSGI process number
 
