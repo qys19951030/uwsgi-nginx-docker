@@ -223,7 +223,7 @@ EXPOSE 8080
 COPY ./app /app
 ```
 
-### Custom `/app/prestart.sh`
+### Custom prestart.sh
 
 If you need to run anything before starting the app, you can add a file `prestart.sh` to the directory `/app`. The image will automatically detect and run it before starting everything.
 
@@ -249,7 +249,9 @@ If you need to run a Python script before starting the app, you could make the `
 python /app/my_custom_prestart_script.py
 ```
 
-**Note**: The image uses `.` to run the script (as in `. /app/prestart.sh`), so for example, environment variables would persist. If you don't understand the previous sentence, you probably don't need it.
+If you are using a custom app directory via the `UWSGI_INI` environment variable, you can alternatively place the `prestart.sh` in the same directory as your custom `uwsgi.ini` file. The image will first look for `prestart.sh` in the directory containing the custom `uwsgi.ini`, and only fall back to `/app/prestart.sh` if not found. This way, you don't need to copy the script to `/app` when using a custom app directory.
+
+**Note**: The image uses `.` to run the script, so for example, environment variables would persist. If you don't understand the previous sentence, you probably don't need it.
 
 ### Custom Nginx processes number
 

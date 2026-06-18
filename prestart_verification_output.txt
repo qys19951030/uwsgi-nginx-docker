@@ -1,0 +1,43 @@
+================================================================================
+  prestart.sh Lookup Logic Verification Tests
+================================================================================
+
+Test setup complete.
+
+--------------------------------------------------------------------------------
+  Test 1: Default scenario (UWSGI_INI=/app/uwsgi.ini)
+  Expected: Check /app/prestart.sh once, execute it
+--------------------------------------------------------------------------------
+Checking for script in /app/prestart.sh
+Running script /app/prestart.sh
+  [EXECUTED] DEFAULT /app/prestart.sh
+
+--------------------------------------------------------------------------------
+  Test 2: Custom app dir WITH prestart.sh (UWSGI_INI=/application/custom_app/uwsgi.ini)
+  Expected: Check custom dir first, execute custom prestart.sh, NO fallback to /app
+--------------------------------------------------------------------------------
+Checking for script in /application/custom_app/prestart.sh
+Running script /application/custom_app/prestart.sh
+  [EXECUTED] CUSTOM /application/custom_app/prestart.sh
+
+--------------------------------------------------------------------------------
+  Test 3: Custom app dir WITHOUT prestart.sh (UWSGI_INI=/application/no_prestart_app/uwsgi.ini)
+  Expected: Check custom dir first, not found, fallback to /app/prestart.sh
+--------------------------------------------------------------------------------
+Checking for script in /application/no_prestart_app/prestart.sh
+There is no script /application/no_prestart_app/prestart.sh
+Checking for script in /app/prestart.sh
+Running script /app/prestart.sh
+  [EXECUTED] DEFAULT /app/prestart.sh
+
+--------------------------------------------------------------------------------
+  Test 4: No UWSGI_INI set at all
+  Expected: Directly check and execute /app/prestart.sh
+--------------------------------------------------------------------------------
+Checking for script in /app/prestart.sh
+Running script /app/prestart.sh
+  [EXECUTED] DEFAULT /app/prestart.sh
+
+================================================================================
+  All tests completed successfully!
+================================================================================
