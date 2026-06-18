@@ -160,7 +160,7 @@ wsgi-file=/application/main.py
 
 **Note**: it's important to include the `WORKDIR` option, otherwise uWSGI will start the application in `/app`.
 
-When using a custom app directory via `UWSGI_INI`, you can also place your `prestart.sh` script in the same directory as your custom `uwsgi.ini` file. The image will first look for `prestart.sh` in the directory containing the custom `uwsgi.ini`, and fall back to `/app/prestart.sh` if not found. This means you don't need to copy your prestart script back to `/app` when using a custom app directory.
+When using a custom app directory via `UWSGI_INI`, you can also place your `prestart.sh` script in the same directory as your custom `uwsgi.ini` file. The image will look for the script in the custom directory first. See the [Custom `/app/prestart.sh`](#custom-appprestartsh) section below for details on the lookup order and fallback behavior.
 
 ### Custom uWSGI process number
 
@@ -223,9 +223,22 @@ EXPOSE 8080
 COPY ./app /app
 ```
 
-### Custom prestart.sh
+### Custom `/app/prestart.sh`
 
 If you need to run anything before starting the app, you can add a file `prestart.sh` to the directory `/app`. The image will automatically detect and run it before starting everything.
+
+If you are using a custom app directory via the `UWSGI_INI` environment variable, you can also place the `prestart.sh` in the same directory as your custom `uwsgi.ini` instead of copying it to `/app`. See below for the lookup order.
+
+#### Lookup order
+
+The image looks for a `prestart.sh` script in the following order:
+
+1. **Custom app directory first**: If the `UWSGI_INI` environment variable is set (pointing to a custom `uwsgi.ini`), the image first looks for `prestart.sh` in the same directory as that custom `uwsgi.ini`.
+2. **Default fallback**: If no custom `prestart.sh` is found (or `UWSGI_INI` is not set), the image falls back to the default `/app/prestart.sh`.
+
+This means if you use a [Custom app directory](#custom-app-directory), you can place your `prestart.sh` right next to your custom `uwsgi.ini`, and you don't need to copy it to `/app` as well. The `/app/prestart.sh` always works as a fallback, so existing setups are not affected.
+
+#### Default usage (in `/app`)
 
 For example, if you want to add database migrations that are run on startup (e.g. with Alembic, or Django migrations), before starting the app, you could create a `./app/prestart.sh` file in your code directory (that will be copied by your `Dockerfile`) with:
 
@@ -249,9 +262,33 @@ If you need to run a Python script before starting the app, you could make the `
 python /app/my_custom_prestart_script.py
 ```
 
-If you are using a custom app directory via the `UWSGI_INI` environment variable, you can alternatively place the `prestart.sh` in the same directory as your custom `uwsgi.ini` file. The image will first look for `prestart.sh` in the directory containing the custom `uwsgi.ini`, and only fall back to `/app/prestart.sh` if not found. This way, you don't need to copy the script to `/app` when using a custom app directory.
+#### Custom app directory usage
 
-**Note**: The image uses `.` to run the script, so for example, environment variables would persist. If you don't understand the previous sentence, you probably don't need it.
+If you use a custom app directory via `UWSGI_INI`, place the `prestart.sh` in the same directory as your custom `uwsgi.ini`:
+
+```
+your-project/
+├── application/
+│   ├── uwsgi.ini
+│   ├── prestart.sh   ← placed next to uwsgi.ini
+│   └── main.py
+└── Dockerfile
+```
+
+And in your `Dockerfile`:
+
+```Dockerfile
+FROM tiangolo/uwsgi-nginx:python3.12
+
+ENV UWSGI_INI /application/uwsgi.ini
+
+COPY ./application /application
+WORKDIR /application
+```
+
+The image will automatically find and run `/application/prestart.sh` first, without needing to also put a copy in `/app`.
+
+**Note**: The image uses `.` to run the script (so it runs in the current shell), which means, for example, environment variables set in the script would persist. If you don't understand the previous sentence, you probably don't need it.
 
 ### Custom Nginx processes number
 
